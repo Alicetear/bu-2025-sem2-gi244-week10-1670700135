@@ -7,6 +7,8 @@ public class PlayerController : MonoBehaviour
     public float gravityModifier;
     public ParticleSystem explosionParticle;
     public ParticleSystem dirtParticle;
+    public int Hp = 3;
+    public bool isDubbleJump;
 
     public AudioClip jumpSfx;
     public AudioClip crashSfx;
@@ -48,6 +50,14 @@ public class PlayerController : MonoBehaviour
             dirtParticle.Stop();
             playerAudio.PlayOneShot(jumpSfx);
         }
+        else if (jumpAction.triggered && !isOnGround && !gameOver && !isDubbleJump)
+        {
+            rb.AddForce(jumpForce * Vector3.up, ForceMode.Impulse);
+            isDubbleJump = true;
+            playerAnim.SetTrigger("Jump_trig");
+            dirtParticle.Stop();
+            playerAudio.PlayOneShot(jumpSfx);
+        }
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -56,17 +66,28 @@ public class PlayerController : MonoBehaviour
         {
             isOnGround = true;
             dirtParticle.Play();
+
+            isDubbleJump = false ;
         }
         else if (collision.gameObject.CompareTag("Obstacle"))
         {
-            Debug.Log("Game Over!");
-            gameOver = true;
-            playerAnim.SetBool("Death_b", true);
+            Destroy(collision.gameObject);
             playerAnim.SetInteger("DeathType_int", 1);
-            explosionParticle.Play();
-            dirtParticle.Stop();
+            //explosionParticle.Play();
+            Instantiate(explosionParticle, transform.position, explosionParticle.transform.rotation);
             playerAudio.PlayOneShot(crashSfx);
+
+            Hp -= 1;
+            if (Hp == 0) 
+            {
+                Debug.Log("Game Over!");
+                gameOver = true;
+                playerAnim.SetBool("Death_b", true);
+                dirtParticle.Stop();
+            }
         }
+
+        
     }
 
 }
